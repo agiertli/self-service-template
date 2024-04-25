@@ -1,0 +1,5 @@
+kafka: ${{values.enable_kafka}}
+postgres: ${{values.enable_postgres}}
+cpu: ${{values.cpu_limit}}
+memory: ${{values.memory_limit}}
+namespace: ${{values.namespace}}
