@@ -2,7 +2,7 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: self-service-template-2
-  title: Add extra services into OpenShift Namespace-2
+  title: Namespace configuration
   description: Add Kafka, PostgreSQL and ResourceQuota to the namespace
   tags:
     - recommended
@@ -40,7 +40,7 @@ spec:
         namespace_id:
           title: Namespace
           type: string
-          default: quarkus-app-dev
+          default: my-quarkus-app-dev
           maxLength: 28
           description: Namespace where you want to apply this template
 
@@ -69,14 +69,14 @@ spec:
 
   steps:
   
-    - id: template-gitops-deployment-2
-      name: Generating Deployment Resources-2
+    - id: template-gitops-deployment
+      name: Generating Deployment Resources
       action: fetch:template
       input:
         url: ./manifests
         copyWithoutTemplating: []
         values:
-          self-service-gitops-repository: https://${{ parameters.repo.host }}/${{ parameters.repo.owner }}/${{ parameters.namespace_id }}-self-service.git
+          destination: https://${{ parameters.repo.host }}/${{ parameters.repo.owner }}/${{ parameters.namespace_id }}-self-service.git
           git_owner: ${{ parameters.repo.owner }}
           cluster: .apps.cluster-9hhkz.sandbox2009.opentlc.com
           namespace: ${{ parameters.namespace_id }}
@@ -102,7 +102,7 @@ spec:
       name: Create ArgoCD Resources
       action: argocd:create-resources
       input:
-        appName: ${{ parameters.namespace_id }}-self-service
+        appName: ${{ parameters.namespace_id }}-self-service-bootstrap
         argoInstance: main
         namespace: janus-argocd
         repoUrl: https://${{ parameters.repo.host }}/${{ parameters.repo.owner }}/${{ parameters.namespace_id }}-self-service.git

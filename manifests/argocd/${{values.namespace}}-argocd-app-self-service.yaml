@@ -9,7 +9,7 @@ metadata:
 spec:
   project: janus
   source:
-    repoURL: ${{ values.self-service-gitops-repository }}
+    repoURL: ${{ values.destination }}
     targetRevision: HEAD
     path: ./helm/app
     helm:
@@ -26,13 +26,8 @@ spec:
       kind: ServiceAccount
   syncPolicy:
     automated:
-      prune: true
       selfHeal: true
     syncOptions:
     - RespectIgnoreDifferences=true
     - ApplyOutOfSyncOnly=true
-    retry:
-      backoff:
-        duration: 5s # the amount to back off. Default unit is seconds, but could also be a duration (e.g. "2m", "1h")
-        factor: 2 # a factor to multiply the base duration after each failed retry
-        maxDuration: 10m # the maximum amount of time allowed for the backoff strategy
+    - SkipDryRunOnMissingResource=true
