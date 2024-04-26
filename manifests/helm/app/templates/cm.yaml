@@ -4,7 +4,7 @@ metadata:
   name: self-service-config-map
   namespace: {{ .Values.namespace }}
 data:
-  kafka: {{ .Values.kafka }}
-  postgres: {{ .Values.postgres }}
-  cpu: {{ .Values.cpu }}
-  memory: {{ .Values.memory }}
+  kafka: "{{ .Values.kafka }}"
+  postgres: "{{ .Values.postgres }}"
+  cpu: "{{ .Values.cpu }}"
+  memory: "{{ .Values.memory }}"
