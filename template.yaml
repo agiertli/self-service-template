@@ -1,8 +1,8 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: self-service-template
-  title: Add extra services into OpenShift Namespace
+  name: self-service-template-2
+  title: Add extra services into OpenShift Namespace-2
   description: Add Kafka, PostgreSQL and ResourceQuota to the namespace
   tags:
     - recommended
@@ -15,7 +15,7 @@ spec:
   parameters:
     - title: Provide Information for required Services
       required:
-        - namespace
+        - namespace_id
       properties:
         enable_kafka:
           title: Install Kafka Broker
@@ -37,7 +37,7 @@ spec:
           type: number
           default: 2
           description: Memory required for your namespace (1-8)   
-        namespace:
+        namespace_id:
           title: Namespace
           type: string
           default: quarkus-app-dev
@@ -69,29 +69,32 @@ spec:
 
   steps:
   
-    - id: template-gitops-deployment
-      name: Generating Deployment Resources
+    - id: template-gitops-deployment-2
+      name: Generating Deployment Resources-2
       action: fetch:template
       input:
         url: ./manifests
         copyWithoutTemplating: []
         values:
-          namespace: ${{ parameters.namespace }}
-          destination: https://${{ parameters.repo.host }}/${{ parameters.repo.owner }}/${{parameters.namespace}}-self-service.git
+          self-service-gitops-repository: https://${{ parameters.repo.host }}/${{ parameters.repo.owner }}/${{ parameters.namespace_id }}-self-service.git
           git_owner: ${{ parameters.repo.owner }}
           cluster: .apps.cluster-9hhkz.sandbox2009.opentlc.com
-          namespace: ${{ parameters.namespace }}-dev
+          namespace: ${{ parameters.namespace_id }}
           repository_host: ${{ parameters.repo.host }}
           user: ${{ user.entity.metadata.name }}
+          enable_kafka: ${{ parameters.enable_kafka }}
+          enable_postgres:  ${{ parameters.enable_postgres }}
+          cpu_limit:  ${{ parameters.cpu_limit }}
+          memory_limit:  ${{ parameters.memory_limit }}
         targetPath: ./tenant-gitops
 
     - id: publish-gitops
       name: Publishing to Resource Repository
       action: publish:gitlab
       input:
-        repoUrl: "${{ parameters.repo.host }}?owner=${{ parameters.repo.owner }}&repo=${{parameters.namespace}}-self-service"
-        title: gitops resources for ${{ parameters.namespace }}
-        description: gitops resources for ${{ parameters.namespace }}
+        repoUrl: "${{ parameters.repo.host }}?owner=${{ parameters.repo.owner }}&repo=${{ parameters.namespace_id }}-self-service"
+        title: gitops resources for ${{ parameters.namespace_id }}
+        description: gitops resources for ${{ parameters.namespace_id }}
         sourcePath: ./tenant-gitops
         repoVisibility: public
 
@@ -99,10 +102,10 @@ spec:
       name: Create ArgoCD Resources
       action: argocd:create-resources
       input:
-        appName: ${{ parameters.namespace }}-self-service
+        appName: ${{ parameters.namespace_id }}-self-service
         argoInstance: main
         namespace: janus-argocd
-        repoUrl: https://${{ parameters.repo.host }}/${{ parameters.repo.owner }}/${{ parameters.namespace }}-self-service.git
+        repoUrl: https://${{ parameters.repo.host }}/${{ parameters.repo.owner }}/${{ parameters.namespace_id }}-self-service.git
         path: 'argocd/'
 
   output:
