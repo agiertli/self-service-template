@@ -79,20 +79,6 @@ spec:
                 - development
 
   steps:
-
-    - id: groupTest
-      name: Verifying that GitLab group exists
-      action: gitlab:group:ensureExists
-      input:
-        repoUrl: "${{ parameters.repo.host }}?owner=${{ parameters.repo.owner }}&repo=${{ parameters.namespace_id }}-self-service"
-        path: 
-         - ${{ parameters.repo.owner }}
-
-    - id: debugGitOpsRepoExists
-      name: debug
-      action: debug:log
-      input:   
-        message: parameters.gitops_repo_exists flag value is ${{parameters.gitops_repo_exists}}  , groupId is  ${{ steps.groupTest.output.groupId }}
   
     - id: template-gitops-deployment
       name: Generating Deployment Resources
