@@ -17,6 +17,11 @@ spec:
       required:
         - namespace_id
       properties:
+        gitops_repo_exists:
+          type: boolean
+          title: Does GitOps repo already exist?
+          description: Was GitOps repo already created (usually on first run of this template)
+          default: false
         enable_kafka:
           title: Install Kafka Broker
           type: boolean
@@ -29,12 +34,18 @@ spec:
           description: Install PosgreSQL Database in the namespace
         cpu_limit:
           title: Required CPU
-          type: number
+          type: integer
           default: 2
+          minimum: 1
+          maximum: 8
+          multipleOf: 1
           description: CPU Required for your namespace (1-4)
         memory_limit:
           title: Memory Limit
-          type: number
+          type: integer
+          minimum: 1
+          maximum: 16
+          multipleOf: 1
           default: 2
           description: Memory required for your namespace (1-8)   
         namespace_id:
@@ -56,9 +67,9 @@ spec:
               title: Repo Host
               type: string
               description: Your SCM host
-              default: gitlab-gitlab.apps.cluster-9hhkz.sandbox2009.opentlc.com
+              default: gitlab-gitlab.apps.cluster-gj9w2.sandbox2270.opentlc.com
               enum:
-                - gitlab-gitlab.apps.cluster-9hhkz.sandbox2009.opentlc.com
+                - gitlab-gitlab.apps.cluster-gj9w2.sandbox2270.opentlc.com
             owner:
               title: Repo Owner
               type: string
@@ -68,6 +79,20 @@ spec:
                 - development
 
   steps:
+
+    - id: groupTest
+      name: Verifying that GitLab group exists
+      action: gitlab:group:ensureExists
+      input:
+        repoUrl: "${{ parameters.repo.host }}?owner=${{ parameters.repo.owner }}&repo=${{ parameters.namespace_id }}-self-service"
+        path: 
+         - ${{ parameters.repo.owner }}
+
+    - id: debugGitOpsRepoExists
+      name: debug
+      action: debug:log
+      input:   
+        message: parameters.gitops_repo_exists flag value is ${{parameters.gitops_repo_exists}}  , groupId is  ${{ steps.groupTest.output.groupId }}
   
     - id: template-gitops-deployment
       name: Generating Deployment Resources
@@ -78,7 +103,7 @@ spec:
         values:
           destination: https://${{ parameters.repo.host }}/${{ parameters.repo.owner }}/${{ parameters.namespace_id }}-self-service.git
           git_owner: ${{ parameters.repo.owner }}
-          cluster: .apps.cluster-9hhkz.sandbox2009.opentlc.com
+          cluster: .apps.cluster-gj9w2.sandbox2270.opentlc.com
           namespace: ${{ parameters.namespace_id }}
           repository_host: ${{ parameters.repo.host }}
           user: ${{ user.entity.metadata.name }}
@@ -88,18 +113,33 @@ spec:
           memory_limit:  ${{ parameters.memory_limit }}
         targetPath: ./tenant-gitops
 
-    - id: publish-gitops
+    - id: publishGitops
       name: Publishing to Resource Repository
       action: publish:gitlab
+      if: ${{ parameters.gitops_repo_exists == false }}
       input:
+        defaultBranch: main
         repoUrl: "${{ parameters.repo.host }}?owner=${{ parameters.repo.owner }}&repo=${{ parameters.namespace_id }}-self-service"
         title: gitops resources for ${{ parameters.namespace_id }}
         description: gitops resources for ${{ parameters.namespace_id }}
         sourcePath: ./tenant-gitops
-        repoVisibility: public
+        repoVisibility: public 
+
+    - id: commitAndPushToGitops
+      name: Pushing to existing GitOps repository
+      action: gitlab:repo:push
+      if: ${{ parameters.gitops_repo_exists == true }}
+      input:
+        repoUrl: "${{ parameters.repo.host }}?owner=${{ parameters.repo.owner }}&repo=${{ parameters.namespace_id }}-self-service"
+        branchName: main
+        commitMessage: Updating GitOps repository ${{ parameters.namespace_id }}-self-service
+        sourcePath: ./tenant-gitops
+        commitAction: update
+
 
     - id: create-argocd-resources
       name: Create ArgoCD Resources
+      if: ${{ parameters.gitops_repo_exists == false }
       action: argocd:create-resources
       input:
         appName: ${{ parameters.namespace_id }}-self-service-bootstrap
@@ -110,5 +150,5 @@ spec:
 
   output:
     links:
-      - title: Source Code Repository
-        url: ${{ steps.publish-gitops.output.remoteUrl }}
+      - title: GitOps Repository
+        url: https://${{ parameters.repo.host }}/${{ parameters.repo.owner }}/${{ parameters.namespace_id }}-self-service.git
