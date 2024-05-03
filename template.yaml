@@ -39,7 +39,7 @@ spec:
           minimum: 1
           maximum: 8
           multipleOf: 1
-          description: CPU Required for your namespace (1-4)
+          description: CPU Required for your namespace (1-8)
         memory_limit:
           title: Memory Limit
           type: integer
@@ -47,7 +47,7 @@ spec:
           maximum: 16
           multipleOf: 1
           default: 8
-          description: Memory required for your namespace (1-8)   
+          description: Memory required for your namespace (1-16)   
         namespace_id:
           title: Namespace
           type: string
