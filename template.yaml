@@ -118,7 +118,7 @@ spec:
       input:
         repoUrl: "${{ parameters.repo.host }}?owner=${{ parameters.repo.owner }}&repo=${{ parameters.namespace_id }}-self-service"
         branchName: main
-        commitMessage: Updating GitOps repository ${{ parameters.namespace_id }}-self-service
+        commitMessage: Comitted via Developer Hub Template -  Updating GitOps repository ${{ parameters.namespace_id }}-self-service
         sourcePath: ./tenant-gitops
         commitAction: update
 
